@@ -1,12 +1,14 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import connectDB from '@/lib/mongodb';
+import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import { sendWelcomeEmail } from '@/lib/emailService';
 
 export async function POST(request) {
   try {
+    console.log('Registration request received');
     const { name, email, password } = await request.json();
+    console.log('Request data:', { name, email, passwordLength: password?.length });
 
     // Validate input
     if (!name || !email || !password) {
@@ -32,7 +34,9 @@ export async function POST(request) {
       );
     }
 
+    console.log('Connecting to database...');
     await connectDB();
+    console.log('Database connected successfully');
 
     // Check if user already exists
     const existingUser = await User.findOne({ email: email.toLowerCase() });
@@ -45,15 +49,13 @@ export async function POST(request) {
 
     // Hash password
     const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create new user
+    const hashedPassword = await bcrypt.hash(password, saltRounds);    // Create new user
     const user = new User({
       name: name.trim(),
       email: email.toLowerCase().trim(),
       password: hashedPassword,
-      provider: 'credentials',
-    });    await user.save();
+      provider: 'email',
+    });await user.save();
 
     // Send welcome email
     try {

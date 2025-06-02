@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import Button from '../ui/Button';
-import { useToast } from '../ui/Toast';
+import { useToast } from '@/app/components/ui/Toast';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -60,13 +60,20 @@ export default function Navbar() {
                     className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     Dashboard
-                  </Link>
-                  {session.user?.role === 'admin' && (
+                  </Link>                  {(session.user?.role === 'admin' || session.user?.role === 'owner') && (
                     <Link
                       href="/admin"
                       className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                       Admin
+                    </Link>
+                  )}
+                  {session.user?.role === 'owner' && (
+                    <Link
+                      href="/promote-admin"
+                      className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      👑 Manage Admins
                     </Link>
                   )}
                 </>
@@ -167,14 +174,22 @@ export default function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
-                </Link>
-                {session.user?.role === 'admin' && (
+                </Link>                {(session.user?.role === 'admin' || session.user?.role === 'owner') && (
                   <Link
                     href="/admin"
                     className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Admin
+                  </Link>
+                )}
+                {session.user?.role === 'owner' && (
+                  <Link
+                    href="/promote-admin"
+                    className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 block px-3 py-2 rounded-md text-base font-medium transition-colors duration-200"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    👑 Manage Admins
                   </Link>
                 )}
               </>

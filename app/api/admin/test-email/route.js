@@ -1,20 +1,27 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { sendWelcomeEmail } from '../../../../lib/emailService';
+import { authOptions } from '../../auth/[...nextauth]/route';
+import { sendWelcomeEmail, testEmailConfig } from '../../../../lib/emailService';
 
 export async function POST(request) {
   try {
     // Check if user is admin
-    const session = await getServerSession();
-    if (!session || session.user?.role !== 'admin') {
+    const session = await getServerSession(authOptions);    if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'owner')) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 403 }
       );
     }
 
-    const { email } = await request.json();
+    const { email, action } = await request.json();
     
+    // Test email configuration only
+    if (action === 'test-config') {
+      const result = await testEmailConfig();
+      return NextResponse.json(result);
+    }
+    
+    // Send test email
     if (!email) {
       return NextResponse.json(
         { error: 'Email address is required' },

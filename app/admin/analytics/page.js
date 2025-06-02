@@ -20,7 +20,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
-import { useToast } from '../components/ui/Toast';
+import { useToast } from '@/app/components/ui/Toast';
 
 export default function AnalyticsPage() {
   const { data: session, status } = useSession();
@@ -29,11 +29,10 @@ export default function AnalyticsPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState('7d');
-
-  // Redirect if not admin
+  // Redirect if not admin or owner
   useEffect(() => {
     if (status === 'loading') return;
-    if (!session || session.user?.role !== 'admin') {
+    if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'owner')) {
       router.push('/');
       return;
     }
@@ -41,7 +40,7 @@ export default function AnalyticsPage() {
 
   // Fetch analytics data
   useEffect(() => {
-    if (session?.user?.role === 'admin') {
+    if (session?.user?.role === 'admin' || session?.user?.role === 'owner') {
       fetchAnalytics();
     }
   }, [session, timeRange]);
@@ -115,8 +114,7 @@ export default function AnalyticsPage() {
       </div>
     );
   }
-
-  if (!session || session.user?.role !== 'admin') {
+  if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'owner')) {
     return null;
   }
 

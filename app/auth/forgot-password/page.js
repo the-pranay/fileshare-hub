@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import { useToast } from '../../components/ui/Toast';
+import { useToast } from '@/app/components/ui/Toast';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');

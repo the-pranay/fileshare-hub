@@ -7,14 +7,13 @@ import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
 import Input from '@/app/components/ui/Input';
 import Loading from '@/app/components/ui/Loading';
-import Toast from '@/app/components/ui/Toast';
-import { testEmailConfig } from '@/lib/emailService';
+import { useToast } from '@/app/components/ui/Toast';
 
 export default function AdminSettings() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState(null);
+  const { success, error } = useToast();
   const [settings, setSettings] = useState({
     maxFileSize: '50',
     maxStoragePerUser: '1024',
@@ -28,22 +27,27 @@ export default function AdminSettings() {
     email: 'checking',
     ipfs: 'checking',
   });
-
   useEffect(() => {
     if (status === 'loading') return;
     
-    if (!session || session.user?.role !== 'admin') {
+    if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'owner')) {
       router.push('/dashboard');
       return;
     }
 
     checkSystemStatus();
   }, [session, status, router]);
-
   const checkSystemStatus = async () => {
-    // Check email configuration
+    // Check email configuration (via API)
     try {
-      const emailResult = await testEmailConfig();
+      const emailResponse = await fetch('/api/admin/test-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'test-config' })
+      });
+      const emailResult = await emailResponse.json();
       setSystemStatus(prev => ({
         ...prev,
         email: emailResult.success ? 'healthy' : 'error'
@@ -86,21 +90,13 @@ export default function AdminSettings() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(settings),
-      });
-
-      if (response.ok) {
-        setToast({
-          type: 'success',
-          message: 'Settings saved successfully!',
-        });
+      });      if (response.ok) {
+        success('Settings saved', 'Settings saved successfully!');
       } else {
         throw new Error('Failed to save settings');
       }
     } catch (error) {
-      setToast({
-        type: 'error',
-        message: 'Failed to save settings. Please try again.',
-      });
+      error('Save failed', 'Failed to save settings. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -117,21 +113,13 @@ export default function AdminSettings() {
         body: JSON.stringify({
           email: session.user.email,
         }),
-      });
-
-      if (response.ok) {
-        setToast({
-          type: 'success',
-          message: 'Test email sent successfully!',
-        });
+      });      if (response.ok) {
+        success('Email test', 'Test email sent successfully!');
       } else {
         throw new Error('Failed to send test email');
       }
-    } catch (error) {
-      setToast({
-        type: 'error',
-        message: 'Failed to send test email. Check email configuration.',
-      });
+    } catch (err) {
+      error('Email test failed', 'Failed to send test email. Check email configuration.');
     } finally {
       setLoading(false);
     }
@@ -351,17 +339,7 @@ export default function AdminSettings() {
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           >
             {loading ? <Loading size="sm" text="Saving..." /> : 'Save Settings'}
-          </Button>
-        </div>
-
-        {/* Toast notifications */}
-        {toast && (
-          <Toast
-            type={toast.type}
-            message={toast.message}
-            onClose={() => setToast(null)}
-          />
-        )}
+          </Button>        </div>
       </div>
     </div>
   );

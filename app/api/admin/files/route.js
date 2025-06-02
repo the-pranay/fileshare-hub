@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import connectDB from '@/lib/mongodb';
+import { authOptions } from '../../auth/[...nextauth]/route';
+import connectToDatabase from '@/lib/mongodb';
 import File from '@/lib/models/File';
 import User from '@/lib/models/User';
 
-export async function GET(request) {
-  try {
+export async function GET(request) {  try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'owner')) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -18,11 +17,10 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page')) || 1;
-    const limit = parseInt(searchParams.get('limit')) || 20;
-    const search = searchParams.get('search') || '';
+    const limit = parseInt(searchParams.get('limit')) || 20;    const search = searchParams.get('search') || '';
     const status = searchParams.get('status') || '';
 
-    await connectDB();
+    await connectToDatabase();
 
     // Build query
     const query = {};
@@ -103,7 +101,7 @@ export async function DELETE(request) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== 'admin') {
+    if (!session || (session.user.role !== 'admin' && session.user.role !== 'owner')) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -117,10 +115,9 @@ export async function DELETE(request) {
       return NextResponse.json(
         { error: 'File ID is required' },
         { status: 400 }
-      );
-    }
+      );    }
 
-    await connectDB();
+    await connectToDatabase();
 
     // Delete file
     const file = await File.findByIdAndDelete(fileId);

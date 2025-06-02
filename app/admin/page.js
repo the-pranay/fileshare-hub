@@ -29,9 +29,7 @@ export default function AdminPanel() {
     if (!session) {
       router.push('/auth/signin');
       return;
-    }
-
-    if (session.user.role !== 'admin') {
+    }    if (session.user.role !== 'admin' && session.user.role !== 'owner') {
       router.push('/dashboard');
       return;
     }

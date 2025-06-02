@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { connectToDatabase } from '../../../../lib/mongodb';
+import { authOptions } from '../../auth/[...nextauth]/route';
+import connectToDatabase from '@/lib/mongodb';
 
 export async function GET(request) {
   try {
     // Check if user is admin
-    const session = await getServerSession();
-    if (!session || session.user?.role !== 'admin') {
+    const session = await getServerSession(authOptions);
+    if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'owner')) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 403 }
@@ -42,7 +43,7 @@ export async function POST(request) {
   try {
     // Check if user is admin
     const session = await getServerSession();
-    if (!session || session.user?.role !== 'admin') {
+    if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'owner')) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 403 }

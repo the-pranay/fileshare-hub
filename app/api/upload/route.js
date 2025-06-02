@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { Web3Storage } from 'web3.storage';
+import { uploadToPinata } from '@/lib/pinataService';
 import { v4 as uuidv4 } from 'uuid';
 import QRCode from 'qrcode';
 import connectDB from '@/lib/mongodb';
@@ -16,8 +16,6 @@ import {
   validateFileType,
   logError 
 } from '@/lib/errorHandler';
-
-const web3Storage = new Web3Storage({ token: process.env.WEB3_STORAGE_TOKEN });
 
 export async function POST(request) {
   try {
@@ -47,21 +45,20 @@ export async function POST(request) {
       validateFileType(file.type);
     } catch (validationError) {
       throw validationError;
-    }
-
-    // Get user session (optional for anonymous uploads)
+    }    // Get user session (optional for anonymous uploads)
     const session = await getServerSession(authOptions);
     
-    // Convert file to buffer and create Web3.Storage compatible file
+    // Convert file to buffer for Pinata upload
     const buffer = Buffer.from(await file.arrayBuffer());
-    const web3File = new globalThis.File([buffer], file.name, {
-      type: file.type,
-    });
-
-    // Upload to IPFS via Web3.Storage
-    let cid;
+    
+    // Upload to IPFS via Pinata
+    let uploadResult;
     try {
-      cid = await web3Storage.put([web3File]);
+      uploadResult = await uploadToPinata(buffer, file.name, {
+        size: file.size,
+        mimeType: file.type,
+        uploadedBy: session?.user?.email || 'anonymous'
+      });
     } catch (ipfsError) {
       throw handleIPFSError(ipfsError);
     }
@@ -76,15 +73,13 @@ export async function POST(request) {
       expiresAt.setHours(expiresAt.getHours() + parseInt(expiresIn));
     }    // Get client IP
     const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : '127.0.0.1';
-
-    // Create file record
+    const ip = forwarded ? forwarded.split(',')[0] : '127.0.0.1';    // Create file record
     const fileRecord = new File({
       filename: file.name,
       originalName: file.name,
       size: file.size,
       mimeType: file.type,
-      cid: cid,
+      cid: uploadResult.ipfsHash,
       downloadId,
       uploadedBy: session?.user?.id || null,
       expiresAt,
@@ -92,6 +87,8 @@ export async function POST(request) {
       password: password || null,
       ipAddress: ip,
       userAgent: request.headers.get('user-agent') || '',
+      ipfsUrl: uploadResult.url,
+      gateway: uploadResult.gateway,
     });
 
     try {
@@ -109,9 +106,7 @@ export async function POST(request) {
       // QR code generation is not critical, log error but continue
       logError(qrError, { context: 'QR code generation', downloadId });
       qrCodeData = null;
-    }
-
-    return NextResponse.json({
+    }    return NextResponse.json({
       success: true,
       downloadId,
       downloadUrl,
@@ -119,7 +114,8 @@ export async function POST(request) {
       fileId: fileRecord._id,
       filename: file.name,
       size: file.size,
-      cid,
+      cid: uploadResult.ipfsHash,
+      ipfsUrl: uploadResult.url,
       expiresAt,
       maxDownloads,
     });

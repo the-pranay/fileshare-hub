@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
-import { Web3Storage } from 'web3.storage';
 import connectDB from '@/lib/mongodb';
 import File from '@/lib/models/File';
-
-const web3Storage = new Web3Storage({ token: process.env.WEB3_STORAGE_TOKEN });
 
 export async function GET(request, { params }) {
   try {
@@ -33,31 +30,33 @@ export async function GET(request, { params }) {
     // Check password if required
     if (fileRecord.password && fileRecord.password !== password) {
       return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
-    }
-
-    // Increment download count
+    }    // Increment download count
     fileRecord.downloadCount += 1;
     await fileRecord.save();
 
-    // Get file from IPFS
-    const res = await web3Storage.get(fileRecord.cid);
-    const files = await res.files();
-    const file = files[0];
-
-    if (!file) {
+    // Get file from IPFS via Pinata gateway
+    const ipfsUrl = fileRecord.ipfsUrl || `${process.env.PINATA_GATEWAY_URL}${fileRecord.cid}`;
+    
+    try {
+      const response = await fetch(ipfsUrl);
+      
+      if (!response.ok) {
+        return NextResponse.json({ error: 'File not found in storage' }, { status: 404 });
+      }      // Get the file data
+      const fileData = await response.arrayBuffer();
+      
+      return new Response(fileData, {
+        headers: {
+          'Content-Type': fileRecord.mimeType,
+          'Content-Disposition': `attachment; filename="${fileRecord.originalName}"`,
+          'Content-Length': fileRecord.size.toString(),
+        },
+      });
+      
+    } catch (fetchError) {
+      console.error('IPFS fetch error:', fetchError);
       return NextResponse.json({ error: 'File not found in storage' }, { status: 404 });
     }
-
-    // Stream the file
-    const fileStream = file.stream();
-    
-    return new Response(fileStream, {
-      headers: {
-        'Content-Type': fileRecord.mimeType,
-        'Content-Disposition': `attachment; filename="${fileRecord.originalName}"`,
-        'Content-Length': fileRecord.size.toString(),
-      },
-    });
 
   } catch (error) {
     console.error('Download error:', error);

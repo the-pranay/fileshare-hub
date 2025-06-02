@@ -164,16 +164,37 @@ export default function Dashboard() {
               </div>
             </div>
           </Card>
-        </div>
-
-        {/* Upload Button */}
-        <div className="mb-8">
+        </div>        {/* Upload Button & Admin Controls */}
+        <div className="mb-8 flex flex-col sm:flex-row gap-4">
           <Button
             onClick={() => setShowUploader(!showUploader)}
             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           >
             {showUploader ? 'Hide Uploader' : 'Upload New File'}
           </Button>
+          
+          {/* Admin/Owner Controls */}
+          {(session.user.role === 'admin' || session.user.role === 'owner') && (
+            <div className="flex gap-2">
+              <Button
+                onClick={() => router.push('/admin')}
+                variant="outline"
+                className="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-900"
+              >
+                Admin Dashboard
+              </Button>
+              
+              {session.user.role === 'owner' && (
+                <Button
+                  onClick={() => router.push('/promote-admin')}
+                  variant="outline"
+                  className="border-green-500 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900"
+                >
+                  Promote Admin
+                </Button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* File Uploader */}

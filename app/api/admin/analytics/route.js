@@ -1,19 +1,21 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../[...nextauth]/route';
-import { connectToDatabase } from '../../../../../lib/mongodb';
-import User from '../../../../../lib/models/User';
-import File from '../../../../../lib/models/File';
+import { authOptions } from '../../auth/[...nextauth]/route';
+import connectToDatabase from '@/lib/mongodb';
+import User from '@/lib/models/User';
+import File from '@/lib/models/File';
 
 export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session || session.user?.role !== 'admin') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
+    // Check if user is admin or owner
+    if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'owner')) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 403 }
+      );
+    }    const { searchParams } = new URL(request.url);
     const range = searchParams.get('range') || '7d';
 
     await connectToDatabase();
@@ -189,9 +191,9 @@ export async function GET(request) {
     return NextResponse.json(analytics);
 
   } catch (error) {
-    console.error('Analytics error:', error);
+    console.error('Analytics API error:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch analytics' },
+      { error: 'Internal Server Error' },
       { status: 500 }
     );
   }

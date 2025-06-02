@@ -72,7 +72,7 @@ function ToastContainer() {
   const { toasts, removeToast } = useToast();
 
   return (
-    <div className="fixed top-4 right-4 z-50 space-y-2">
+    <div className="fixed top-4 right-4 z-50 flex flex-col space-y-3 max-w-sm">
       {toasts.map((toast) => (
         <Toast key={toast.id} toast={toast} onRemove={removeToast} />
       ))}
@@ -119,28 +119,33 @@ function Toast({ toast, onRemove }) {
       </svg>
     ),
   };
-
   return (
     <div className={`max-w-sm w-full shadow-lg rounded-lg border p-4 ${typeStyles[type]} transform transition-all duration-300 ease-in-out`}>
-      <div className="flex items-start">
-        <div className={`flex-shrink-0 ${iconStyles[type]}`}>
-          {icons[type]}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className={`flex-shrink-0 ${iconStyles[type]}`}>
+            {icons[type]}
+          </div>
+          <div className="flex-1 min-w-0">
+            {title && message ? (
+              <div>
+                <p className="text-sm font-medium truncate">
+                  {title}
+                </p>
+                <p className="text-sm mt-1 break-words">
+                  {message}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm font-medium break-words">
+                {title || message}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="ml-3 w-0 flex-1">
-          {title && (
-            <p className="text-sm font-medium">
-              {title}
-            </p>
-          )}
-          {message && (
-            <p className={`text-sm ${title ? 'mt-1' : ''}`}>
-              {message}
-            </p>
-          )}
-        </div>
-        <div className="ml-4 flex-shrink-0 flex">
+        <div className="ml-4 flex-shrink-0">
           <button
-            className="inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            className="inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 rounded-md"
             onClick={() => onRemove(id)}
           >
             <span className="sr-only">Close</span>
