@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# documentation files with sensitive information
+# exclude all .md files except README.md
+*.md
+!README.md
+
+# scripts with potential sensitive data
+scripts/
