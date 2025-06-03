@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
 import Input from '@/app/components/ui/Input';
@@ -158,17 +159,25 @@ export default function AdminSettings() {
       </div>
     );
   }
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Admin Settings
-          </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Manage system configuration and monitor service health
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Admin Settings
+              </h1>
+              <p className="mt-2 text-gray-600 dark:text-gray-400">
+                Manage system configuration and monitor service health
+              </p>
+            </div>
+            <div className="mt-4 sm:mt-0">
+              <Link href="/admin">
+                <Button variant="outline">Back to Admin Panel</Button>
+              </Link>
+            </div>
+          </div>
         </div>
 
         {/* System Status */}

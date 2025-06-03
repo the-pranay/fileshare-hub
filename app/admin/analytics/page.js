@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import {
   LineChart,
   Line,
@@ -20,6 +21,7 @@ import {
   Legend,
   ResponsiveContainer
 } from 'recharts';
+import Button from '@/app/components/ui/Button';
 import { useToast } from '@/app/components/ui/Toast';
 
 export default function AnalyticsPage() {
@@ -117,7 +119,6 @@ export default function AnalyticsPage() {
   if (!session || (session.user?.role !== 'admin' && session.user?.role !== 'owner')) {
     return null;
   }
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -132,7 +133,7 @@ export default function AnalyticsPage() {
                 Comprehensive insights into your FileShare Hub usage
               </p>
             </div>
-            <div className="mt-4 sm:mt-0">
+            <div className="mt-4 sm:mt-0 flex gap-4 items-center">
               <select
                 value={timeRange}
                 onChange={(e) => setTimeRange(e.target.value)}
@@ -143,6 +144,9 @@ export default function AnalyticsPage() {
                 <option value="30d">Last 30 Days</option>
                 <option value="90d">Last 3 Months</option>
               </select>
+              <Link href="/admin">
+                <Button variant="outline">Back to Admin Panel</Button>
+              </Link>
             </div>
           </div>
         </div>
