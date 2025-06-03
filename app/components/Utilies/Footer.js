@@ -14,7 +14,7 @@ export default function Footer() {
           <div className="flex items-center space-x-6 order-1 sm:order-2">
             {/* Social/GitHub Link */}
             <a
-              href="https://github.com/your-repo/fileshare-hub"
+              href="https://github.com/the-pranay"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
