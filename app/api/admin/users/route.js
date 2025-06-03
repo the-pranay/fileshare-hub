@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import connectDB from '@/lib/mongodb';
+import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import File from '@/lib/models/File';
 
@@ -17,11 +17,10 @@ export async function GET(request) {  try {
 
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page')) || 1;
-    const limit = parseInt(searchParams.get('limit')) || 20;
-    const search = searchParams.get('search') || '';
+    const limit = parseInt(searchParams.get('limit')) || 20;    const search = searchParams.get('search') || '';
     const role = searchParams.get('role') || '';
 
-    await connectDB();
+    await connectToDatabase();
 
     // Build query
     const query = {};
@@ -107,10 +106,9 @@ export async function PUT(request) {
       return NextResponse.json(
         { error: 'Invalid role' },
         { status: 400 }
-      );
-    }
+      );    }
 
-    await connectDB();
+    await connectToDatabase();
 
     const user = await User.findByIdAndUpdate(
       userId,
@@ -160,11 +158,10 @@ export async function DELETE(request) {
     if (userId === session.user.id) {
       return NextResponse.json(
         { error: 'Cannot delete your own account' },
-        { status: 400 }
-      );
+        { status: 400 }      );
     }
 
-    await connectDB();
+    await connectToDatabase();
 
     // Delete user's files first
     await File.deleteMany({ userId });

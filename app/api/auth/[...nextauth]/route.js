@@ -23,12 +23,11 @@ export const authOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' }
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+      async authorize(credentials) {        if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
-        await connectDB();
+        await connectToDatabase();
         
         const user = await User.findOne({ email: credentials.email });
         if (!user) {

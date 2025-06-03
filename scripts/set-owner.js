@@ -1,11 +1,11 @@
 // Script to set permanent owner for FileShare Hub
-const connectDB = require('../lib/mongodb.js').default;
+const connectToDatabase = require('../lib/mongodb.js').default;
 const User = require('../lib/models/User.js').default;
 require('dotenv').config({ path: '.env.local' });
 
 async function setOwner() {
   try {
-    await connectDB();
+    await connectToDatabase();
     
     const ownerEmail = 'thepranay2004@gmail.com';
     

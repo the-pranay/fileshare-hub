@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import connectDB from '@/lib/mongodb';
+import connectToDatabase from '@/lib/mongodb';
 import File from '@/lib/models/File';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 export async function GET(request) {
   try {
-    await connectDB();
+    await connectToDatabase();
     
     const session = await getServerSession(authOptions);
     const { searchParams } = new URL(request.url);
@@ -61,7 +61,7 @@ export async function GET(request) {
 
 export async function DELETE(request) {
   try {
-    await connectDB();
+    await connectToDatabase();
     
     const session = await getServerSession(authOptions);
     const { searchParams } = new URL(request.url);
@@ -103,7 +103,7 @@ export async function DELETE(request) {
 
 export async function PATCH(request) {
   try {
-    await connectDB();
+    await connectToDatabase();
     
     const session = await getServerSession(authOptions);
     const { fileId, action, ...updateData } = await request.json();

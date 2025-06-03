@@ -32,10 +32,8 @@ export async function POST(request) {
         { error: 'Please enter a valid email address' },
         { status: 400 }
       );
-    }
-
-    console.log('Connecting to database...');
-    await connectDB();
+    }    console.log('Connecting to database...');
+    await connectToDatabase();
     console.log('Database connected successfully');
 
     // Check if user already exists

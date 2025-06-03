@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { uploadToPinata } from '@/lib/pinataService';
 import { v4 as uuidv4 } from 'uuid';
 import QRCode from 'qrcode';
-import connectDB from '@/lib/mongodb';
+import connectToDatabase from '@/lib/mongodb';
 import File from '@/lib/models/File';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { 
@@ -19,7 +19,7 @@ import {
 
 export async function POST(request) {
   try {
-    await connectDB();
+    await connectToDatabase();
     
     const formData = await request.formData();
     const file = formData.get('file');

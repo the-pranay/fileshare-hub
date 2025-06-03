@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import connectDB from '@/lib/mongodb';
+import connectToDatabase from '@/lib/mongodb';
 import File from '@/lib/models/File';
 
 export async function GET(request, { params }) {
   try {
-    await connectDB();
+    await connectToDatabase();
     
     const { downloadId } = params;
     const { searchParams } = new URL(request.url);
@@ -69,7 +69,7 @@ export async function GET(request, { params }) {
 
 export async function POST(request, { params }) {
   try {
-    await connectDB();
+    await connectToDatabase();
     
     const { downloadId } = params;
     const { password } = await request.json();

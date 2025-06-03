@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-import connectDB from '@/lib/mongodb';
+import connectToDatabase from '@/lib/mongodb';
 import User from '@/lib/models/User';
 
 export async function POST(request) {
@@ -13,10 +13,9 @@ export async function POST(request) {
       return NextResponse.json(
         { error: 'Email is required' },
         { status: 400 }
-      );
-    }
+      );    }
 
-    await connectDB();
+    await connectToDatabase();
 
     // Check if current user has permission to promote/demote
     if (session) {
@@ -81,10 +80,9 @@ export async function POST(request) {
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    
-    // Check if current user has permission to view users
+      // Check if current user has permission to view users
     if (session) {
-      await connectDB();
+      await connectToDatabase();
       const currentUser = await User.findOne({ email: session.user.email });
       if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'owner')) {
         return NextResponse.json(
