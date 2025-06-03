@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { useSession } from 'next-auth/react';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import Loading from '../ui/Loading';
@@ -11,6 +12,7 @@ import { useToast } from '@/app/components/ui/Toast';
 import { formatBytes } from '@/lib/utils';
 
 export default function FileUploader({ onUploadComplete }) {
+  const { data: session, status } = useSession();
   const [uploading, setUploading] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -22,17 +24,36 @@ export default function FileUploader({ onUploadComplete }) {
   const [showSettings, setShowSettings] = useState(false);
   const { success, error } = useToast();
 
+  // Log session status for debugging
+  useEffect(() => {
+    console.log('🔍 Session status update:', {
+      status,
+      hasSession: !!session,
+      userEmail: session?.user?.email,
+      userId: session?.user?.id
+    });
+  }, [session, status]);
   const onDrop = useCallback(async (acceptedFiles) => {
     const file = acceptedFiles[0];
-    if (!file) return;    // Validate file size (50MB limit)
+    if (!file) return;
+
+    // Validate file size (50MB limit)
     if (file.size > 50 * 1024 * 1024) {
       error('File too large', 'File size must be less than 50MB');
       return;
     }
 
     setUploading(true);
+    setUploadProgress(0);
 
     try {
+      console.log('🚀 Starting file upload:', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        timestamp: new Date().toISOString()
+      });
+
       const formData = new FormData();
       formData.append('file', file);
       
@@ -47,16 +68,47 @@ export default function FileUploader({ onUploadComplete }) {
         formData.append('password', uploadSettings.password);
       }
 
+      console.log('📤 Sending upload request to /api/upload');
+      
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => Math.min(prev + 10, 85));
+      }, 300);
+
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
+        credentials: 'include', // Ensure session cookies are sent
       });
 
-      const result = await response.json();
+      clearInterval(progressInterval);
+      setUploadProgress(90);
+
+      console.log('📥 Upload response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
+      let result;
+      try {
+        result = await response.json();
+        console.log('📋 Response data:', result);
+      } catch (parseError) {
+        console.error('❌ Failed to parse JSON response:', parseError);
+        throw new Error('Server returned invalid response');
+      }
+
+      setUploadProgress(100);
 
       if (!response.ok) {
-        throw new Error(result.error || 'Upload failed');
-      }      setUploadedFile(result);
+        const errorMessage = result.error?.message || result.error || `Upload failed with status ${response.status}`;
+        console.error('❌ Upload failed:', errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      console.log('✅ Upload successful:', result);
+      setUploadedFile(result);
       
       // Reset form
       setUploadSettings({
@@ -72,13 +124,30 @@ export default function FileUploader({ onUploadComplete }) {
       // Notify parent component
       if (onUploadComplete) {
         onUploadComplete();
-      }    } catch (error) {
-      console.error('Upload error:', error);
-      error('Upload failed', error.message || 'An error occurred while uploading your file');
+      }
+
+    } catch (error) {
+      console.error('💥 Upload error:', error);
+      
+      // Provide more detailed error information
+      let userMessage = 'An error occurred while uploading your file';
+      
+      if (error.message.includes('Failed to fetch')) {
+        userMessage = 'Network error - please check your connection and try again';
+      } else if (error.message.includes('413')) {
+        userMessage = 'File too large - please try a smaller file';
+      } else if (error.message.includes('401') || error.message.includes('403')) {
+        userMessage = 'Authentication issue - please refresh the page and try again';
+      } else if (error.message) {
+        userMessage = error.message;
+      }
+      
+      error('Upload failed', userMessage);
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
-  }, [uploadSettings, onUploadComplete]);
+  }, [uploadSettings, onUploadComplete, success, error]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -106,6 +175,25 @@ export default function FileUploader({ onUploadComplete }) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* User Status Indicator */}
+      <Card padding="sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className={`w-3 h-3 rounded-full ${
+              status === 'loading' ? 'bg-yellow-400' :
+              session ? 'bg-green-400' : 'bg-gray-400'
+            }`} />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {status === 'loading' ? 'Checking authentication...' :
+               session ? `Signed in as ${session.user.email}` : 'Not signed in (anonymous upload)'}
+            </span>
+          </div>
+          {session && (
+            <Badge variant="success" size="sm">Authenticated</Badge>
+          )}
+        </div>
+      </Card>
+
       {/* Upload Area */}
       <Card padding="lg">
         <div

@@ -1,46 +1,49 @@
 # FileShare Hub 🚀
 
-A comprehensive file sharing platform built with Next.js, featuring drag & drop upload to IPFS, secure download links, user authentication, dashboard management, and admin panel.
+A comprehensive decentralized file sharing platform built with Next.js, featuring drag & drop upload to IPFS via Pinata, secure download links, QR code generation, user authentication, dashboard management, and admin panel with real-time statistics.
 
 ## ✨ Features
 
-- 🌐 **Decentralized Storage**: Upload files to IPFS via Web3.Storage
-- 🔐 **Secure Sharing**: Password-protected downloads with expiration dates
-- 📱 **QR Code Generation**: Easy mobile sharing with auto-generated QR codes
-- 👥 **User Authentication**: GitHub OAuth and email/password authentication
-- 📊 **Analytics Dashboard**: Comprehensive file and user analytics
-- 🛡️ **Admin Panel**: User management, system settings, and monitoring
-- 📧 **Email Notifications**: Welcome emails and password reset functionality
-- 🌙 **Dark Mode**: Responsive UI with dark mode support
-- ⚡ **Rate Limiting**: Built-in protection against abuse
-- 📈 **Real-time Stats**: Live file upload/download tracking
+- 🌐 **Decentralized Storage**: Upload files to IPFS via Pinata for permanent, distributed storage
+- 🔐 **Secure Sharing**: Password-protected downloads with expiration dates and download limits
+- 📱 **QR Code Generation**: Instant QR codes for easy mobile sharing with download functionality
+- 👥 **User Authentication**: GitHub OAuth and email/password authentication with NextAuth.js
+- 📊 **Real-time Analytics**: Live dashboard with file uploads, downloads, and user statistics
+- 🛡️ **Admin Panel**: Comprehensive user management, system monitoring, and health checks
+- 📧 **Email Notifications**: Welcome emails and password reset functionality with SMTP
+- 🌙 **Modern UI**: Responsive design with dark mode support and Framer Motion animations
+- ⚡ **Rate Limiting**: Built-in protection against abuse with configurable limits
+- 📈 **Dynamic Statistics**: Auto-refreshing homepage with total files, users, and uptime
+- 🔒 **Security Features**: File type validation, size limits, and secure token-based authentication
+- 📱 **Mobile Responsive**: Optimized for all devices with touch-friendly interfaces
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 14, React, Tailwind CSS
-- **Authentication**: NextAuth.js with GitHub OAuth
-- **Database**: MongoDB with Mongoose
-- **Storage**: IPFS via Web3.Storage
-- **Email**: Nodemailer with SMTP
-- **Charts**: Recharts for analytics
-- **QR Codes**: qrcode library
-- **UI Components**: Custom component library
+- **Frontend**: Next.js 15, React 19, Tailwind CSS 4
+- **Authentication**: NextAuth.js with GitHub OAuth and JWT
+- **Database**: MongoDB with Mongoose ODM
+- **Storage**: IPFS via Pinata (HTTP API + Gateway)
+- **Email**: Nodemailer with SMTP support
+- **Charts**: Recharts for analytics visualization  
+- **QR Codes**: qrcode library for generation
+- **UI/UX**: Framer Motion, React Dropzone, React Hot Toast
+- **Deployment**: Vercel with optimized function configuration
 
 ## 📦 Installation
 
 ### Prerequisites
 
 - Node.js 18+ 
-- MongoDB (local or cloud)
-- Web3.Storage account and API token
-- Email provider (Gmail, Outlook, etc.)
-- GitHub OAuth app (optional)
+- MongoDB (local or MongoDB Atlas)
+- Pinata account and JWT token (free 1GB storage)
+- Email provider credentials (Gmail, Outlook, etc.)
+- GitHub OAuth app (optional, for GitHub authentication)
 
-### Setup
+### Quick Setup
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/your-username/fileshare-hub.git
    cd fileshare-hub
    ```
 
@@ -79,27 +82,28 @@ Create a `.env.local` file in the root directory with the following variables:
 # Database
 MONGODB_URI=mongodb://localhost:27017/fileshare-hub
 
-# NextAuth
+# NextAuth Configuration
 NEXTAUTH_URL=http://localhost:3000
 NEXTAUTH_SECRET=your-secret-key-here-generate-with-openssl-rand-base64-32
 
-# Web3.Storage (Required for file uploads)
-WEB3_STORAGE_TOKEN=your-web3-storage-token
+# IPFS Storage - Pinata (1GB free, unlimited uploads)
+PINATA_JWT=your-pinata-jwt-token
+PINATA_GATEWAY_URL=https://gateway.pinata.cloud/ipfs/
 
-# JWT Secret
+# JWT Secret for password reset tokens
 JWT_SECRET=your-jwt-secret-key-generate-with-openssl-rand-base64-32
 
-# Email Configuration (Required for password reset)
+# Email Configuration (Required for password reset and notifications)
 EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=your-email@gmail.com
-EMAIL_PASS=your-email-password
+EMAIL_PASS=your-email-app-password
 ```
 
 ### Optional Variables
 
 ```bash
-# GitHub OAuth (Optional)
+# GitHub OAuth (Optional - for GitHub authentication)
 GITHUB_ID=your-github-client-id
 GITHUB_SECRET=your-github-client-secret
 
@@ -112,16 +116,14 @@ ADMIN_EMAIL=admin@yourcompany.com
 
 # Security Settings
 BCRYPT_SALT_ROUNDS=12
-RATE_LIMIT_MAX=100
+RATE_LIMIT_MAX=100  # Max requests per window
 RATE_LIMIT_WINDOW=900000  # 15 minutes in milliseconds
 
 # File Type Restrictions
 ALLOWED_FILE_TYPES=image/*,application/pdf,text/*,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document
 
-# Storage Limits
-MAX_STORAGE_PER_USER=1073741824  # 1GB in bytes
-
-# Analytics
+# Storage and Analytics
+MAX_STORAGE_PER_USER=1073741824  # 1GB per user
 ANALYTICS_RETENTION_DAYS=90
 
 # Development
@@ -131,50 +133,64 @@ DEBUG_MODE=false
 
 ## 🔑 Service Setup
 
-### Web3.Storage Setup
+### Pinata IPFS Setup (Required)
 
-1. Go to [web3.storage](https://web3.storage)
-2. Sign up for a free account
-3. Generate an API token
-4. Add the token to your `.env.local` as `WEB3_STORAGE_TOKEN`
+1. Go to [pinata.cloud](https://pinata.cloud) and create a free account
+2. Navigate to API Keys in your dashboard
+3. Generate a new API key with the following permissions:
+   - `pinFileToIPFS`
+   - `pinJSONToIPFS` 
+   - `unpin`
+   - `userPinnedDataTotal`
+4. Copy the JWT token and add it to your `.env.local` as `PINATA_JWT`
+5. The free plan includes 1GB storage with unlimited uploads
 
 ### Email Setup (Gmail Example)
 
 1. Enable 2-Factor Authentication on your Gmail account
 2. Generate an App Password:
-   - Go to Google Account settings
-   - Security → 2-Step Verification → App passwords
+   - Go to Google Account settings → Security
+   - Select "2-Step Verification" → "App passwords"
    - Generate password for "Mail"
-3. Use the app password in `EMAIL_PASS`
+3. Use your Gmail address for `EMAIL_USER`
+4. Use the generated app password (not your regular password) for `EMAIL_PASS`
 
 ### GitHub OAuth Setup (Optional)
 
 1. Go to GitHub Settings → Developer settings → OAuth Apps
-2. Create a new OAuth App:
-   - Homepage URL: `http://localhost:3000`
-   - Authorization callback URL: `http://localhost:3000/api/auth/callback/github`
-3. Add the Client ID and Secret to your `.env.local`
+2. Create a new OAuth App with:
+   - **Application name**: FileShare Hub
+   - **Homepage URL**: `http://localhost:3000` (or your domain)
+   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
+3. Copy the Client ID and Client Secret to your `.env.local`
 
 ### MongoDB Setup
 
-#### Local MongoDB
+#### Option 1: Local MongoDB
 ```bash
 # Install MongoDB Community Edition
-# Start MongoDB service
-mongod
-
-# Or using Homebrew (macOS)
+# macOS (Homebrew)
+brew install mongodb-community
 brew services start mongodb-community
+
+# Ubuntu/Debian
+sudo apt install mongodb
+sudo systemctl start mongodb
+
+# Windows
+# Download from https://www.mongodb.com/try/download/community
 ```
 
-#### MongoDB Atlas (Cloud)
+#### Option 2: MongoDB Atlas (Recommended)
 1. Create account at [MongoDB Atlas](https://www.mongodb.com/atlas)
-2. Create a cluster
-3. Get connection string and add to `MONGODB_URI`
+2. Create a free cluster (M0)
+3. Create a database user
+4. Whitelist your IP address (or use 0.0.0.0/0 for development)
+5. Get the connection string and add to `MONGODB_URI`
 
 ## 🚀 Deployment
 
-### Vercel Deployment
+### Vercel Deployment (Recommended)
 
 1. **Push to GitHub**
    ```bash
@@ -184,53 +200,106 @@ brew services start mongodb-community
    ```
 
 2. **Deploy to Vercel**
-   - Go to [vercel.com](https://vercel.com)
-   - Import your GitHub repository
-   - Add environment variables in project settings
-   - Deploy
+   - Go to [vercel.com](https://vercel.com) and sign in
+   - Click "Import Project" and select your GitHub repository
+   - Vercel will auto-detect Next.js configuration
+   - Add environment variables in project settings:
+     - Copy all variables from your `.env.local`
+     - Update `NEXTAUTH_URL` to your production domain
+   - Deploy the project
 
-3. **Update Environment Variables**
-   - Update `NEXTAUTH_URL` to your production domain
-   - Ensure all API tokens are production-ready
+3. **Vercel Configuration**
+   The project includes `vercel.json` with optimized settings:
+   ```json
+   {
+     "functions": {
+       "app/api/upload/route.js": {
+         "maxDuration": 30
+       }
+     }
+   }
+   ```
 
-### Other Platforms
+4. **Post-Deployment**
+   - Update GitHub OAuth callback URL to production domain
+   - Test file upload functionality
+   - Monitor function logs for any issues
+
+### Alternative Deployment Platforms
 
 The app can be deployed to any Node.js hosting platform:
-- Netlify
-- Railway
-- Heroku
-- DigitalOcean App Platform
+
+- **Netlify**: Use `npm run build && npm run start`
+- **Railway**: Connect GitHub repo and deploy
+- **Heroku**: Add buildpack for Node.js
+- **DigitalOcean App Platform**: Use GitHub integration
+- **AWS Amplify**: Connect repository and deploy
+
+### Environment Variables for Production
+
+Ensure these are set correctly for production:
+```bash
+NEXTAUTH_URL=https://your-domain.com
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/fileshare-hub
+PINATA_JWT=your-production-pinata-jwt
+EMAIL_HOST=your-production-smtp-host
+```
 
 ## 📁 Project Structure
 
 ```
 fileshare-hub/
-├── app/                          # Next.js app directory
+├── app/                          # Next.js 15 app directory
 │   ├── admin/                    # Admin panel pages
-│   │   ├── analytics/           # Analytics dashboard
-│   │   └── settings/            # Admin settings
+│   │   ├── analytics/           # System analytics dashboard
+│   │   ├── settings/            # Admin configuration
+│   │   └── users/               # User management
 │   ├── api/                     # API routes
-│   │   ├── admin/               # Admin APIs
-│   │   ├── auth/                # Authentication APIs
-│   │   ├── download/            # Download APIs
+│   │   ├── admin/               # Admin APIs (health, users, etc.)
+│   │   ├── auth/                # NextAuth.js authentication
+│   │   ├── download/[id]/       # File download handler
 │   │   ├── files/               # File management APIs
-│   │   └── upload/              # Upload APIs
+│   │   │   └── generate-qr/     # QR code generation
+│   │   ├── stats/               # Real-time statistics API
+│   │   ├── test-db/             # Database connectivity test
+│   │   └── upload/              # File upload to IPFS
 │   ├── auth/                    # Authentication pages
+│   │   ├── signin/              # Custom sign-in page
+│   │   ├── signup/              # User registration
+│   │   └── forgot-password/     # Password reset
 │   ├── components/              # React components
 │   │   ├── Home/               # Homepage components
-│   │   ├── ui/                 # UI components
-│   │   ├── Upload/             # Upload components
-│   │   └── Utilities/          # Utility components
+│   │   │   ├── Hero.js         # Hero with dynamic stats
+│   │   │   ├── Features.js     # Feature showcase
+│   │   │   └── FAQ.js          # Frequently asked questions
+│   │   ├── ui/                 # Reusable UI components
+│   │   │   ├── Button.js       # Custom button component
+│   │   │   ├── Card.js         # Card component
+│   │   │   ├── Input.js        # Form input component
+│   │   │   ├── Loading.js      # Loading spinner
+│   │   │   ├── QRCodeDisplay.js # QR code modal component
+│   │   │   └── Toast.js        # Toast notifications
+│   │   ├── Upload/             # Upload-related components
+│   │   │   ├── FileUploader.js # Main upload component
+│   │   │   └── DropZone.js     # Drag & drop interface
+│   │   └── Dashboard/          # Dashboard components
 │   ├── dashboard/              # User dashboard
-│   ├── download/               # Download pages
-│   └── upload/                 # Upload pages
+│   ├── download/[id]/          # File download pages
+│   └── upload/                 # File upload interface
 ├── lib/                        # Utilities and configurations
-│   ├── models/                 # MongoDB models
-│   ├── emailService.js         # Email service
-│   ├── errorHandler.js         # Error handling
+│   ├── models/                 # MongoDB Mongoose models
+│   │   ├── File.js            # File schema with QR codes
+│   │   └── User.js            # User schema
+│   ├── pinataService.js        # IPFS upload via Pinata
+│   ├── emailService.js         # SMTP email service
+│   ├── errorHandler.js         # Centralized error handling
 │   ├── mongodb.js              # Database connection
 │   └── utils.js                # Utility functions
-└── public/                     # Static assets
+├── public/                     # Static assets
+├── scripts/                    # Development scripts
+│   └── test-vercel-upload.js   # Upload testing script
+├── vercel.json                 # Vercel deployment config
+└── README.md                   # This file
 ```
 
 ## 🎯 Usage
@@ -238,88 +307,363 @@ fileshare-hub/
 ### For Users
 
 1. **Upload Files**
-   - Drag and drop files or click to browse
-   - Set expiration date and download limits
-   - Add password protection (optional)
-   - Get shareable link and QR code
+   - Visit `/upload` or drag files to homepage
+   - Set optional expiration date (hours/days)
+   - Configure maximum download limits
+   - Add password protection if needed
+   - Get instant shareable link and QR code
+   - Files are stored permanently on IPFS
 
-2. **Manage Files**
-   - View uploaded files in dashboard
-   - Monitor download statistics
-   - Delete or update file settings
+2. **Share Files**
+   - Copy download link to clipboard
+   - Share QR code for mobile access
+   - Download QR code as PNG image
+   - Send via email or messaging apps
 
-3. **Download Files**
-   - Use shared links to download files
-   - Enter password if required
-   - Files are served directly from IPFS
+3. **Manage Files (Dashboard)**
+   - View all uploaded files with statistics
+   - Monitor download counts and remaining limits
+   - See QR codes for each file (click to enlarge)
+   - Delete files or update settings
+   - Track upload history and storage usage
 
-### For Admins
+4. **Download Files**
+   - Use shared links to access files
+   - Enter password if file is protected
+   - Files served directly from IPFS gateway
+   - Download count automatically tracked
 
-1. **Admin Panel**
-   - Access via `/admin` (requires admin role)
-   - View system statistics and analytics
-   - Manage users and files
+### For Administrators
 
-2. **Settings**
+1. **Admin Panel** (`/admin`)
+   - System overview with key metrics
+   - Real-time statistics dashboard
+   - User management and activity monitoring
+   - File management and moderation tools
+
+2. **Health Monitoring**
+   - Database connectivity status
+   - IPFS/Pinata service health
+   - Email service configuration test
+   - Error logs and system diagnostics
+
+3. **User Management**
+   - View all registered users
+   - Monitor user activity and uploads
+   - Manage user permissions
+   - Ban or restrict problematic users
+
+4. **System Settings**
    - Configure file size limits
    - Set rate limiting rules
-   - Monitor system health
-   - Test email configuration
+   - Manage allowed file types
+   - Monitor storage usage and quotas
+
+### API Endpoints
+
+Key API endpoints for integration:
+
+```bash
+POST /api/upload              # Upload file to IPFS
+GET  /api/download/[id]       # Download file by ID
+GET  /api/stats               # Real-time system statistics
+POST /api/files/generate-qr   # Generate QR code for file
+GET  /api/admin/health/ipfs   # IPFS service health check
+GET  /api/test-db             # Database connectivity test
+```
 
 ## 🔒 Security Features
 
-- **Input Validation**: Comprehensive validation on all inputs
-- **Rate Limiting**: Prevents abuse and spam
-- **File Type Restrictions**: Configurable allowed file types
-- **Size Limits**: Configurable file size restrictions
-- **Password Protection**: Optional password protection for downloads
-- **Expiration Dates**: Automatic file expiration
-- **CSRF Protection**: NextAuth.js provides CSRF protection
-- **SQL Injection Protection**: MongoDB with Mongoose provides protection
+- **Input Validation**: Comprehensive server-side validation for all inputs
+- **Rate Limiting**: Configurable request limits to prevent abuse (100 req/15min default)
+- **File Type Restrictions**: Whitelist-based file type validation
+- **Size Limits**: Configurable maximum file size (50MB default)
+- **Password Protection**: Optional bcrypt-hashed password protection for downloads
+- **Expiration Dates**: Automatic file cleanup after expiration
+- **CSRF Protection**: NextAuth.js provides built-in CSRF protection
+- **JWT Security**: Secure token-based authentication with configurable expiration
+- **MongoDB Injection Protection**: Mongoose ODM provides automatic sanitization
+- **Environment Security**: Sensitive configuration isolated in environment variables
+- **HTTPS Enforcement**: Production deployments enforce HTTPS connections
+- **Admin Access Control**: Role-based access control for administrative functions
 
-## 📊 Analytics
+## 📊 Analytics & Monitoring
 
-The platform includes comprehensive analytics:
-- Upload/download trends
-- User activity patterns
-- File type distribution
-- Storage usage statistics
-- Geographic distribution (IP-based)
+The platform includes comprehensive analytics and monitoring:
+
+### Real-time Statistics
+- Total files uploaded and storage used
+- Active users and registration trends
+- Download counts and popular files
+- System uptime and performance metrics
+- Geographic distribution of users (IP-based)
+
+### Dashboard Features
+- Upload/download trends over time
+- File type distribution analytics
+- User activity patterns and engagement
+- Storage usage per user and globally
+- Error rates and system health metrics
+
+### Admin Monitoring
+- System health checks (Database, IPFS, Email)
+- User activity logs and audit trails
+- File moderation and content management
+- Performance metrics and resource usage
+- Security event logging and alerts
+
+## 🛡️ Error Handling & Debugging
+
+### Comprehensive Error Management
+- Centralized error handling with consistent error responses
+- Detailed logging for production debugging
+- User-friendly error messages with actionable guidance
+- Automatic retry mechanisms for transient failures
+
+### Development Tools
+- Debug mode with enhanced logging (`DEBUG_MODE=true`)
+- Database connectivity testing endpoint (`/api/test-db`)
+- IPFS service health check (`/api/admin/health/ipfs`)
+- Upload testing script (`scripts/test-vercel-upload.js`)
+
+### Common Issues & Solutions
+1. **Upload Failures**: Check Pinata JWT token and network connectivity
+2. **Database Errors**: Verify MongoDB connection string and network access
+3. **Email Issues**: Confirm SMTP credentials and app password setup
+4. **Authentication Problems**: Check NextAuth configuration and secrets
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+We welcome contributions to FileShare Hub! Here's how you can help:
+
+### Development Setup
+
+1. **Fork and Clone**
+   ```bash
+   git clone https://github.com/your-username/fileshare-hub.git
+   cd fileshare-hub
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up Environment**
+   ```bash
+   cp .env.example .env.local
+   # Fill in your development environment variables
+   ```
+
+4. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+
+### Making Changes
+
+1. **Create a Feature Branch**
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+
+2. **Make Your Changes**
+   - Follow the existing code style and patterns
+   - Add comments for complex logic
+   - Update documentation if needed
+
+3. **Test Your Changes**
+   ```bash
+   # Test locally
+   npm run dev
+   
+   # Run any available tests
+   npm run lint
+   ```
+
+4. **Commit and Push**
+   ```bash
+   git add .
+   git commit -m "Add amazing feature: description of changes"
+   git push origin feature/amazing-feature
+   ```
+
+5. **Create Pull Request**
+   - Open a PR with a clear description
+   - Include screenshots for UI changes
+   - Reference any related issues
+
+### Contribution Guidelines
+
+- **Code Style**: Follow existing patterns and use meaningful variable names
+- **Commits**: Use clear, descriptive commit messages
+- **Testing**: Test your changes thoroughly before submitting
+- **Documentation**: Update README.md and comments as needed
+- **Issues**: Check existing issues before creating new ones
+
+### Areas for Contribution
+
+- 🐛 **Bug Fixes**: Check the Issues tab for reported bugs
+- ✨ **Features**: Implement items from the roadmap
+- 📚 **Documentation**: Improve docs, add examples, fix typos
+- 🎨 **UI/UX**: Enhance design and user experience
+- 🔧 **Performance**: Optimize code and reduce bundle size
+- 🧪 **Testing**: Add unit tests and integration tests
 
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🆘 Support
+### MIT License Summary
+
+```
+MIT License
+
+Copyright (c) 2024 FileShare Hub
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+```
+
+## 🆘 Support & Troubleshooting
+
+### Getting Help
 
 If you encounter any issues:
 
-1. Check the [Issues](../../issues) page
-2. Review the environment variable configuration
-3. Ensure all services (MongoDB, Web3.Storage, Email) are properly configured
-4. Check the console logs for detailed error messages
+1. **Check the Documentation**: Review this README and other docs in the repository
+2. **Search Issues**: Look through existing [GitHub Issues](../../issues) for solutions
+3. **Create an Issue**: If you can't find a solution, create a detailed issue report
+4. **Community Support**: Join discussions in the repository's Discussion tab
 
-## 🔮 Roadmap
+### Common Issues & Solutions
 
-- [ ] File versioning system
-- [ ] Bulk upload functionality
-- [ ] Advanced user permissions
-- [ ] API rate limiting per user
-- [ ] File encryption at rest
-- [ ] Mobile app (React Native)
-- [ ] Advanced analytics and reporting
-- [ ] Integration with more storage providers
-- [ ] Folder organization system
-- [ ] Collaborative file sharing
+#### Upload Not Working
+```bash
+# Check Pinata configuration
+node scripts/test-api.js
+
+# Test database connection  
+node scripts/test-db-connection.js
+
+# Debug upload process
+node scripts/upload-diagnostics.js
+```
+
+#### Environment Variable Issues
+```bash
+# Check environment setup
+node scripts/check-prod-env.js
+
+# Verify Vercel environment
+node scripts/check-vercel-env.js
+```
+
+#### Database Connection Problems
+- Verify MongoDB URI format and credentials
+- Check network connectivity and firewall settings
+- Ensure IP whitelist includes your deployment IP
+
+#### Email Service Issues
+- Confirm SMTP settings and credentials
+- Use app-specific passwords for Gmail
+- Test email configuration via admin panel
+
+### Debug Scripts Available
+
+The project includes several helpful debug scripts:
+
+```bash
+# Test local functionality
+node scripts/test-local.js
+
+# Test production deployment
+node scripts/test-production.js
+
+# Check API responses
+node scripts/debug-api-responses.js
+
+# Verify environment variables
+node scripts/vercel-env-exact.js
+```
+
+### Performance Optimization
+
+- **File Size**: Keep uploads under 50MB for optimal performance
+- **IPFS Gateway**: Use CDN for faster file delivery
+- **Database**: Index frequently queried fields
+- **Rate Limiting**: Adjust limits based on your usage patterns
+
+## 📈 Roadmap & Future Features
+
+### Upcoming Features
+
+- [ ] **File Versioning**: Track file versions and allow rollbacks
+- [ ] **Bulk Operations**: Upload and manage multiple files at once
+- [ ] **Advanced Permissions**: Granular sharing permissions and user roles
+- [ ] **API Authentication**: Token-based API access for developers
+- [ ] **File Encryption**: Client-side encryption before IPFS upload
+- [ ] **Mobile App**: React Native app for iOS and Android
+- [ ] **Advanced Analytics**: Detailed reporting and insights dashboard
+- [ ] **Storage Integrations**: Support for AWS S3, Google Cloud Storage
+- [ ] **Collaboration**: Shared folders and team workspaces
+- [ ] **File Preview**: In-browser preview for common file types
+
+### Technical Improvements
+
+- [ ] **Performance**: Implement caching and CDN integration
+- [ ] **Testing**: Add comprehensive unit and integration tests
+- [ ] **Monitoring**: Implement application performance monitoring
+- [ ] **Security**: Enhanced security auditing and vulnerability scanning
+- [ ] **Scalability**: Auto-scaling and load balancing capabilities
+- [ ] **Documentation**: Interactive API documentation with examples
+
+### Community Features
+
+- [ ] **Plugin System**: Allow community-developed extensions
+- [ ] **Themes**: Customizable UI themes and branding
+- [ ] **Localization**: Multi-language support
+- [ ] **Integration**: Webhooks and third-party service integrations
 
 ---
 
-Made By the-pranay
+## 👨‍💻 About
+
+**FileShare Hub** is a modern, decentralized file sharing platform built with the latest web technologies. It leverages IPFS for permanent, distributed storage and provides a seamless user experience for sharing files securely.
+
+### Key Highlights
+
+- ⚡ **Modern Stack**: Built with Next.js 15, React 19, and Tailwind CSS 4
+- 🌐 **Decentralized**: Files stored on IPFS for permanent availability
+- 🔒 **Secure**: Comprehensive security features and best practices
+- 📱 **Responsive**: Mobile-first design with PWA capabilities
+- 🚀 **Fast**: Optimized for performance with modern build tools
+- 🛠️ **Developer Friendly**: Well-documented API and clear code structure
+
+### Live Demo
+
+Visit our live deployment: [https://filesharehub.vercel.app](https://filesharehub.vercel.app)
+
+### Repository Stats
+
+![GitHub stars](https://img.shields.io/github/stars/your-username/fileshare-hub)
+![GitHub forks](https://img.shields.io/github/forks/your-username/fileshare-hub)
+![GitHub issues](https://img.shields.io/github/issues/your-username/fileshare-hub)
+![GitHub license](https://img.shields.io/github/license/your-username/fileshare-hub)
+
+---
+
+**Made with ❤️ by [the-pranay](https://github.com/the-pranay)**
+
+*If you find this project helpful, please consider giving it a ⭐ on GitHub!*

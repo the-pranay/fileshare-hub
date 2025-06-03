@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 10px 0; }
+        textarea { width: 100%; height: 200px; }
+    </style>
+</head>
+<body>
+    <h1>Upload Authentication Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Anonymous Upload</h2>
+        <button onclick="testAnonymousUpload()">Test Anonymous Upload</button>
+        <div id="anonymous-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Check Session</h2>
+        <button onclick="checkSession()">Check Current Session</button>
+        <div id="session-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Sign In and Upload</h2>
+        <button onclick="signInAndUpload()">Sign In and Test Upload</button>
+        <div id="auth-result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Debug Log</h2>
+        <textarea id="debug-log" readonly></textarea>
+        <button onclick="clearLog()">Clear Log</button>
+    </div>
+
+    <script>
+        let logArea = document.getElementById('debug-log');
+        
+        function log(message) {
+            console.log(message);
+            logArea.value += new Date().toISOString() + ': ' + message + '\n';
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        
+        function clearLog() {
+            logArea.value = '';
+        }
+        
+        async function testAnonymousUpload() {
+            log('Testing anonymous upload...');
+            const resultDiv = document.getElementById('anonymous-result');
+            
+            try {
+                // Create test file
+                const testContent = 'Test file content for anonymous upload - ' + new Date().toISOString();
+                const blob = new Blob([testContent], { type: 'text/plain' });
+                
+                const formData = new FormData();
+                formData.append('file', blob, 'test-anonymous.txt');
+                
+                log('Sending anonymous upload request...');
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                log('Response status: ' + response.status);
+                const result = await response.json();
+                log('Response data: ' + JSON.stringify(result, null, 2));
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<span class="success">✅ Anonymous upload successful!</span><br>' +
+                        'Download ID: ' + result.downloadId + '<br>' +
+                        'File: ' + result.filename;
+                } else {
+                    resultDiv.innerHTML = '<span class="error">❌ Anonymous upload failed</span><br>' +
+                        'Error: ' + (result.error?.message || result.error || 'Unknown error');
+                }
+            } catch (error) {
+                log('Anonymous upload error: ' + error.message);
+                resultDiv.innerHTML = '<span class="error">❌ Error: ' + error.message + '</span>';
+            }
+        }
+        
+        async function checkSession() {
+            log('Checking session...');
+            const resultDiv = document.getElementById('session-result');
+            
+            try {
+                const response = await fetch('/api/auth/session');
+                const session = await response.json();
+                
+                log('Session data: ' + JSON.stringify(session, null, 2));
+                
+                if (session.user) {
+                    resultDiv.innerHTML = '<span class="success">✅ Logged in as: ' + session.user.email + '</span>';
+                } else {
+                    resultDiv.innerHTML = '<span class="info">ℹ️ Not logged in</span>';
+                }
+            } catch (error) {
+                log('Session check error: ' + error.message);
+                resultDiv.innerHTML = '<span class="error">❌ Error checking session</span>';
+            }
+        }
+        
+        async function signInAndUpload() {
+            log('Testing authenticated upload...');
+            const resultDiv = document.getElementById('auth-result');
+            
+            try {
+                // First check if already logged in
+                const sessionResponse = await fetch('/api/auth/session');
+                const session = await sessionResponse.json();
+                
+                if (!session.user) {
+                    resultDiv.innerHTML = '<span class="info">ℹ️ Please sign in first through the main site, then try this test</span>';
+                    return;
+                }
+                
+                log('User is logged in as: ' + session.user.email);
+                
+                // Now test upload with authentication
+                const testContent = 'Test file content for authenticated upload - ' + new Date().toISOString();
+                const blob = new Blob([testContent], { type: 'text/plain' });
+                
+                const formData = new FormData();
+                formData.append('file', blob, 'test-authenticated.txt');
+                
+                log('Sending authenticated upload request...');
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                });
+                
+                log('Response status: ' + response.status);
+                const result = await response.json();
+                log('Response data: ' + JSON.stringify(result, null, 2));
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<span class="success">✅ Authenticated upload successful!</span><br>' +
+                        'Download ID: ' + result.downloadId + '<br>' +
+                        'File: ' + result.filename + '<br>' +
+                        'Uploaded by: ' + session.user.email;
+                } else {
+                    resultDiv.innerHTML = '<span class="error">❌ Authenticated upload failed</span><br>' +
+                        'Error: ' + (result.error?.message || result.error || 'Unknown error');
+                }
+            } catch (error) {
+                log('Authenticated upload error: ' + error.message);
+                resultDiv.innerHTML = '<span class="error">❌ Error: ' + error.message + '</span>';
+            }
+        }
+        
+        // Initialize
+        log('Upload test page loaded');
+    </script>
+</body>
+</html>

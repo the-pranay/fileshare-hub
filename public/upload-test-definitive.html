@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Test - Definitive</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 20px; border: 1px solid #ddd; border-radius: 6px; }
+        .success { color: #059669; background: #ecfdf5; padding: 8px; border-radius: 4px; }
+        .error { color: #dc2626; background: #fef2f2; padding: 8px; border-radius: 4px; }
+        .info { color: #2563eb; background: #eff6ff; padding: 8px; border-radius: 4px; }
+        .warning { color: #d97706; background: #fffbeb; padding: 8px; border-radius: 4px; }
+        button { padding: 12px 24px; margin: 10px 5px 10px 0; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; }
+        button:hover { background: #2563eb; }
+        button:disabled { background: #9ca3af; cursor: not-allowed; }
+        textarea { width: 100%; height: 300px; font-family: monospace; font-size: 12px; padding: 10px; border: 1px solid #d1d5db; border-radius: 4px; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .status-box { padding: 15px; border-radius: 6px; margin: 10px 0; }
+        .result-item { margin: 10px 0; padding: 10px; border-left: 4px solid #e5e7eb; background: #f9fafb; }
+        .result-item.success { border-left-color: #059669; }
+        .result-item.error { border-left-color: #dc2626; }
+        .code { font-family: monospace; background: #f3f4f6; padding: 2px 4px; border-radius: 3px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Upload Authentication Test - Definitive</h1>
+        <p>This page will definitively test whether upload functionality works for both anonymous and authenticated users.</p>
+        
+        <div class="test-section">
+            <h2>🔍 Current Status</h2>
+            <div id="status-info" class="status-box info">
+                Checking session status...
+            </div>
+            <button onclick="checkSession()">Refresh Session Status</button>
+        </div>
+
+        <div class="grid">
+            <div class="test-section">
+                <h2>📤 Test Anonymous Upload</h2>
+                <p>This test uploads a file without including authentication credentials.</p>
+                <button onclick="testAnonymousUpload()" id="test-anon-btn">Test Anonymous Upload</button>
+                <div id="anon-result"></div>
+            </div>
+
+            <div class="test-section">
+                <h2>🔐 Test Authenticated Upload</h2>
+                <p>This test uploads a file with authentication credentials included.</p>
+                <button onclick="testAuthenticatedUpload()" id="test-auth-btn">Test Authenticated Upload</button>
+                <div id="auth-result"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔄 Run All Tests</h2>
+            <button onclick="runAllTests()" id="run-all-btn">Run Complete Test Suite</button>
+            <div id="summary-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📝 Debug Log</h2>
+            <textarea id="debug-log" readonly placeholder="Test logs will appear here..."></textarea>
+            <br>
+            <button onclick="clearLog()">Clear Log</button>
+            <button onclick="downloadLog()">Download Log</button>
+        </div>
+    </div>
+
+    <script>
+        let logArea = document.getElementById('debug-log');
+        let testCount = 0;
+        
+        function log(message) {
+            const timestamp = new Date().toISOString();
+            const logMessage = `${timestamp}: ${message}`;
+            console.log(logMessage);
+            logArea.value += logMessage + '\n';
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+        
+        function clearLog() {
+            logArea.value = '';
+            testCount = 0;
+        }
+        
+        function downloadLog() {
+            const blob = new Blob([logArea.value], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `upload-test-log-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function setResult(elementId, success, message, details = null) {
+            const element = document.getElementById(elementId);
+            const resultClass = success ? 'success' : 'error';
+            const icon = success ? '✅' : '❌';
+            
+            element.innerHTML = `
+                <div class="result-item ${resultClass}">
+                    <div><strong>${icon} ${message}</strong></div>
+                    ${details ? `<details><summary>Show Details</summary><pre style="margin-top: 10px; font-size: 11px; overflow-x: auto;">${JSON.stringify(details, null, 2)}</pre></details>` : ''}
+                </div>
+            `;
+        }
+        
+        async function checkSession() {
+            log('Checking session status...');
+            const statusElement = document.getElementById('status-info');
+            
+            try {
+                const response = await fetch('/api/auth/session', {
+                    credentials: 'include'
+                });
+                const session = await response.json();
+                
+                log(`Session response: ${JSON.stringify(session)}`);
+                
+                if (session.user) {
+                    statusElement.className = 'status-box success';
+                    statusElement.innerHTML = `
+                        <strong>✅ Logged In</strong><br>
+                        User: ${session.user.email}<br>
+                        ID: ${session.user.id}<br>
+                        Role: ${session.user.role || 'user'}
+                    `;
+                    log(`User logged in: ${session.user.email}`);
+                    return session;
+                } else {
+                    statusElement.className = 'status-box warning';
+                    statusElement.innerHTML = `
+                        <strong>⚠️ Not Logged In</strong><br>
+                        Authentication tests will be limited.<br>
+                        <a href="/auth/signin" target="_blank">Sign In</a> to test authenticated uploads.
+                    `;
+                    log('No active session found');
+                    return null;
+                }
+            } catch (error) {
+                log(`Session check error: ${error.message}`);
+                statusElement.className = 'status-box error';
+                statusElement.innerHTML = `<strong>❌ Session Check Failed</strong><br>${error.message}`;
+                return null;
+            }
+        }
+        
+        async function createTestFile(name, content) {
+            return new File([content], name, { type: 'text/plain' });
+        }
+        
+        async function performUpload(file, description, includeCredentials = false) {
+            log(`Starting ${description}...`);
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const options = {
+                    method: 'POST',
+                    body: formData,
+                };
+                
+                if (includeCredentials) {
+                    options.credentials = 'include';
+                    log('Including credentials in request');
+                }
+                
+                log('Sending upload request...');
+                const startTime = Date.now();
+                const response = await fetch('/api/upload', options);
+                const endTime = Date.now();
+                
+                log(`Response received in ${endTime - startTime}ms`);
+                log(`Status: ${response.status} ${response.statusText}`);
+                
+                const responseText = await response.text();
+                let result;
+                
+                try {
+                    result = JSON.parse(responseText);
+                    log(`Response data: ${JSON.stringify(result, null, 2)}`);
+                } catch (e) {
+                    log(`Failed to parse JSON response: ${responseText.substring(0, 200)}...`);
+                    result = { error: 'Invalid JSON response', raw: responseText.substring(0, 500) };
+                }
+                
+                if (response.ok) {
+                    log(`✅ ${description} successful!`);
+                    return { success: true, result, status: response.status };
+                } else {
+                    log(`❌ ${description} failed with status ${response.status}`);
+                    return { success: false, result, status: response.status };
+                }
+                
+            } catch (error) {
+                log(`💥 ${description} error: ${error.message}`);
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function testAnonymousUpload() {
+            const btn = document.getElementById('test-anon-btn');
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+            
+            try {
+                testCount++;
+                const file = await createTestFile(
+                    `test-anonymous-${testCount}.txt`, 
+                    `Anonymous upload test #${testCount} - ${new Date().toISOString()}\nThis file should upload without authentication.`
+                );
+                
+                const result = await performUpload(file, 'Anonymous Upload', false);
+                
+                if (result.success) {
+                    setResult('anon-result', true, 'Anonymous upload successful!', {
+                        downloadId: result.result.downloadId,
+                        filename: result.result.filename,
+                        size: result.result.size,
+                        downloadUrl: result.result.downloadUrl
+                    });
+                } else {
+                    setResult('anon-result', false, 'Anonymous upload failed', {
+                        status: result.status,
+                        error: result.result?.error || result.error,
+                        details: result.result
+                    });
+                }
+                
+                return result;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test Anonymous Upload';
+            }
+        }
+        
+        async function testAuthenticatedUpload() {
+            const btn = document.getElementById('test-auth-btn');
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+            
+            try {
+                testCount++;
+                const file = await createTestFile(
+                    `test-authenticated-${testCount}.txt`, 
+                    `Authenticated upload test #${testCount} - ${new Date().toISOString()}\nThis file should upload with authentication credentials.`
+                );
+                
+                const result = await performUpload(file, 'Authenticated Upload', true);
+                
+                if (result.success) {
+                    setResult('auth-result', true, 'Authenticated upload successful!', {
+                        downloadId: result.result.downloadId,
+                        filename: result.result.filename,
+                        size: result.result.size,
+                        downloadUrl: result.result.downloadUrl
+                    });
+                } else {
+                    setResult('auth-result', false, 'Authenticated upload failed', {
+                        status: result.status,
+                        error: result.result?.error || result.error,
+                        details: result.result
+                    });
+                }
+                
+                return result;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Test Authenticated Upload';
+            }
+        }
+        
+        async function runAllTests() {
+            const btn = document.getElementById('run-all-btn');
+            btn.disabled = true;
+            btn.textContent = 'Running Tests...';
+            
+            try {
+                log('='.repeat(60));
+                log('STARTING COMPLETE TEST SUITE');
+                log('='.repeat(60));
+                
+                // Check session
+                const session = await checkSession();
+                
+                // Run both tests
+                const anonResult = await testAnonymousUpload();
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Small delay
+                const authResult = await testAuthenticatedUpload();
+                
+                // Generate summary
+                const summary = {
+                    timestamp: new Date().toISOString(),
+                    sessionStatus: session ? `Logged in as ${session.user.email}` : 'Not logged in',
+                    anonymousUpload: anonResult.success ? 'SUCCESS' : 'FAILED',
+                    authenticatedUpload: authResult.success ? 'SUCCESS' : 'FAILED',
+                    issues: []
+                };
+                
+                if (!anonResult.success) {
+                    summary.issues.push(`Anonymous upload failed: ${anonResult.result?.error?.message || anonResult.error}`);
+                }
+                
+                if (!authResult.success) {
+                    summary.issues.push(`Authenticated upload failed: ${authResult.result?.error?.message || authResult.error}`);
+                }
+                
+                const allWorking = anonResult.success && authResult.success;
+                
+                log('='.repeat(60));
+                log('TEST SUITE COMPLETE');
+                log('='.repeat(60));
+                log(`Final Result: ${allWorking ? 'ALL WORKING' : 'ISSUES DETECTED'}`);
+                
+                const summaryElement = document.getElementById('summary-result');
+                if (allWorking) {
+                    summaryElement.innerHTML = `
+                        <div class="result-item success">
+                            <strong>✅ All Tests Passed!</strong><br>
+                            Both anonymous and authenticated uploads are working correctly.<br>
+                            <small>Session: ${summary.sessionStatus}</small>
+                        </div>
+                    `;
+                } else {
+                    summaryElement.innerHTML = `
+                        <div class="result-item error">
+                            <strong>❌ Issues Detected</strong><br>
+                            ${summary.issues.join('<br>')}<br>
+                            <small>Session: ${summary.sessionStatus}</small>
+                        </div>
+                    `;
+                }
+                
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Run Complete Test Suite';
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            log('Upload test page loaded');
+            checkSession();
+        });
+    </script>
+</body>
+</html>
