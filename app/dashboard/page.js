@@ -7,6 +7,7 @@ import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
 import Loading from '@/app/components/ui/Loading';
 import Badge from '@/app/components/ui/Badge';
+import QRCodeDisplay from '@/app/components/ui/QRCodeDisplay';
 import FileUploader from '@/app/components/Upload/FileUploader';
 import { formatBytes, formatDate } from '@/lib/utils';
 
@@ -83,11 +84,26 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Error toggling file status:', error);
     }
+  };  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);    // You can add a toast notification here
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    // You can add a toast notification here
+  const generateQRCode = async (fileId) => {
+    try {
+      const response = await fetch('/api/files/generate-qr', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ fileId }),
+      });
+      
+      if (response.ok) {
+        fetchFiles(); // Refresh the list to show the new QR code
+      }
+    } catch (error) {
+      console.error('Error generating QR code:', error);
+    }
   };
 
   if (status === 'loading' || loading) {
@@ -254,9 +270,7 @@ export default function Dashboard() {
                             Expires: {formatDate(file.expiresAt)}
                           </span>
                         )}
-                      </div>
-
-                      <div className="mt-2">
+                      </div>                      <div className="mt-2">
                         <div className="flex items-center gap-2">
                           <input
                             type="text"
@@ -271,7 +285,43 @@ export default function Dashboard() {
                           >
                             Copy
                           </Button>
-                        </div>
+                        </div>                        
+                        {/* QR Code Section */}
+                        {file.qrCode ? (
+                          <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <QRCodeDisplay 
+                              qrCode={file.qrCode}
+                              downloadUrl={`${window.location.origin}/download/${file.downloadId}`}
+                              filename={file.originalName}
+                              size="sm"
+                            />
+                          </div>                        ) : (
+                          <div className="mt-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                            <div className="flex items-start gap-3">
+                              <div className="p-2 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+                                <svg className="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.084 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                              </div>
+                              <div className="flex-1">
+                                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                                  QR Code Unavailable
+                                </p>
+                                <p className="text-xs text-yellow-600 dark:text-yellow-300 mt-1">
+                                  This file was uploaded before QR code generation was enabled.
+                                </p>
+                              </div>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => generateQRCode(file._id)}
+                                className="text-xs border-yellow-300 text-yellow-700 hover:bg-yellow-100 dark:border-yellow-600 dark:text-yellow-300 dark:hover:bg-yellow-900"
+                              >
+                                Generate QR
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 

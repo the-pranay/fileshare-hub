@@ -52,8 +52,7 @@ export async function GET(request) {  try {
           path: '$user',
           preserveNullAndEmptyArrays: true,
         },
-      },
-      {
+      },      {
         $addFields: {
           isExpired: {
             $cond: {
@@ -62,8 +61,10 @@ export async function GET(request) {  try {
               else: false,
             },
           },
-          userName: '$user.name',
-          userEmail: '$user.email',
+          uploader: {
+            name: '$user.name',
+            email: '$user.email',
+          },
         },
       },
       {
@@ -76,10 +77,9 @@ export async function GET(request) {  try {
       { $limit: limit },
     ]);
 
-    const total = await File.countDocuments(query);
-
-    return NextResponse.json({
+    const total = await File.countDocuments(query);    return NextResponse.json({
       files,
+      totalPages: Math.ceil(total / limit),
       pagination: {
         page,
         limit,
@@ -106,16 +106,15 @@ export async function DELETE(request) {
         { error: 'Unauthorized' },
         { status: 401 }
       );
-    }
-
-    const { searchParams } = new URL(request.url);
-    const fileId = searchParams.get('fileId');
+    }    const { searchParams } = new URL(request.url);
+    const fileId = searchParams.get('id');
 
     if (!fileId) {
       return NextResponse.json(
         { error: 'File ID is required' },
         { status: 400 }
-      );    }
+      );
+    }
 
     await connectToDatabase();
 

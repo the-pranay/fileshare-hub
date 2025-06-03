@@ -73,7 +73,16 @@ export async function POST(request) {
       expiresAt.setHours(expiresAt.getHours() + parseInt(expiresIn));
     }    // Get client IP
     const forwarded = request.headers.get('x-forwarded-for');
-    const ip = forwarded ? forwarded.split(',')[0] : '127.0.0.1';    // Create file record
+    const ip = forwarded ? forwarded.split(',')[0] : '127.0.0.1';    // Generate download URL and QR code
+    const downloadUrl = `${process.env.NEXTAUTH_URL}/download/${downloadId}`;
+    let qrCodeData;
+    try {
+      qrCodeData = await QRCode.toDataURL(downloadUrl);
+    } catch (qrError) {
+      // QR code generation is not critical, log error but continue
+      logError(qrError, { context: 'QR code generation', downloadId });
+      qrCodeData = null;
+    }    // Create file record
     const fileRecord = new File({
       filename: file.name,
       originalName: file.name,
@@ -89,24 +98,17 @@ export async function POST(request) {
       userAgent: request.headers.get('user-agent') || '',
       ipfsUrl: uploadResult.url,
       gateway: uploadResult.gateway,
+      qrCode: qrCodeData, // Save QR code to database
     });
 
+    // Save the file record to database
     try {
       await fileRecord.save();
-    } catch (mongoError) {
-      throw handleMongoError(mongoError);
+    } catch (dbError) {
+      throw handleMongoError(dbError);
     }
 
-    // Generate download URL and QR code
-    const downloadUrl = `${process.env.NEXTAUTH_URL}/download/${downloadId}`;
-    let qrCodeData;
-    try {
-      qrCodeData = await QRCode.toDataURL(downloadUrl);
-    } catch (qrError) {
-      // QR code generation is not critical, log error but continue
-      logError(qrError, { context: 'QR code generation', downloadId });
-      qrCodeData = null;
-    }    return NextResponse.json({
+    return NextResponse.json({
       success: true,
       downloadId,
       downloadUrl,
