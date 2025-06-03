@@ -131,120 +131,6 @@ NODE_ENV=development
 DEBUG_MODE=false
 ```
 
-## 🔑 Service Setup
-
-### Pinata IPFS Setup (Required)
-
-1. Go to [pinata.cloud](https://pinata.cloud) and create a free account
-2. Navigate to API Keys in your dashboard
-3. Generate a new API key with the following permissions:
-   - `pinFileToIPFS`
-   - `pinJSONToIPFS` 
-   - `unpin`
-   - `userPinnedDataTotal`
-4. Copy the JWT token and add it to your `.env.local` as `PINATA_JWT`
-5. The free plan includes 1GB storage with unlimited uploads
-
-### Email Setup (Gmail Example)
-
-1. Enable 2-Factor Authentication on your Gmail account
-2. Generate an App Password:
-   - Go to Google Account settings → Security
-   - Select "2-Step Verification" → "App passwords"
-   - Generate password for "Mail"
-3. Use your Gmail address for `EMAIL_USER`
-4. Use the generated app password (not your regular password) for `EMAIL_PASS`
-
-### GitHub OAuth Setup (Optional)
-
-1. Go to GitHub Settings → Developer settings → OAuth Apps
-2. Create a new OAuth App with:
-   - **Application name**: FileShare Hub
-   - **Homepage URL**: `http://localhost:3000` (or your domain)
-   - **Authorization callback URL**: `http://localhost:3000/api/auth/callback/github`
-3. Copy the Client ID and Client Secret to your `.env.local`
-
-### MongoDB Setup
-
-#### Option 1: Local MongoDB
-```bash
-# Install MongoDB Community Edition
-# macOS (Homebrew)
-brew install mongodb-community
-brew services start mongodb-community
-
-# Ubuntu/Debian
-sudo apt install mongodb
-sudo systemctl start mongodb
-
-# Windows
-# Download from https://www.mongodb.com/try/download/community
-```
-
-#### Option 2: MongoDB Atlas (Recommended)
-1. Create account at [MongoDB Atlas](https://www.mongodb.com/atlas)
-2. Create a free cluster (M0)
-3. Create a database user
-4. Whitelist your IP address (or use 0.0.0.0/0 for development)
-5. Get the connection string and add to `MONGODB_URI`
-
-## 🚀 Deployment
-
-### Vercel Deployment (Recommended)
-
-1. **Push to GitHub**
-   ```bash
-   git add .
-   git commit -m "Initial commit"
-   git push origin main
-   ```
-
-2. **Deploy to Vercel**
-   - Go to [vercel.com](https://vercel.com) and sign in
-   - Click "Import Project" and select your GitHub repository
-   - Vercel will auto-detect Next.js configuration
-   - Add environment variables in project settings:
-     - Copy all variables from your `.env.local`
-     - Update `NEXTAUTH_URL` to your production domain
-   - Deploy the project
-
-3. **Vercel Configuration**
-   The project includes `vercel.json` with optimized settings:
-   ```json
-   {
-     "functions": {
-       "app/api/upload/route.js": {
-         "maxDuration": 30
-       }
-     }
-   }
-   ```
-
-4. **Post-Deployment**
-   - Update GitHub OAuth callback URL to production domain
-   - Test file upload functionality
-   - Monitor function logs for any issues
-
-### Alternative Deployment Platforms
-
-The app can be deployed to any Node.js hosting platform:
-
-- **Netlify**: Use `npm run build && npm run start`
-- **Railway**: Connect GitHub repo and deploy
-- **Heroku**: Add buildpack for Node.js
-- **DigitalOcean App Platform**: Use GitHub integration
-- **AWS Amplify**: Connect repository and deploy
-
-### Environment Variables for Production
-
-Ensure these are set correctly for production:
-```bash
-NEXTAUTH_URL=https://your-domain.com
-MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/fileshare-hub
-PINATA_JWT=your-production-pinata-jwt
-EMAIL_HOST=your-production-smtp-host
-```
-
 ## 📁 Project Structure
 
 ```
@@ -358,19 +244,6 @@ fileshare-hub/
    - Set rate limiting rules
    - Manage allowed file types
    - Monitor storage usage and quotas
-
-### API Endpoints
-
-Key API endpoints for integration:
-
-```bash
-POST /api/upload              # Upload file to IPFS
-GET  /api/download/[id]       # Download file by ID
-GET  /api/stats               # Real-time system statistics
-POST /api/files/generate-qr   # Generate QR code for file
-GET  /api/admin/health/ipfs   # IPFS service health check
-GET  /api/test-db             # Database connectivity test
-```
 
 ## 🔒 Security Features
 
@@ -493,48 +366,10 @@ We welcome contributions to FileShare Hub! Here's how you can help:
    - Include screenshots for UI changes
    - Reference any related issues
 
-### Contribution Guidelines
-
-- **Code Style**: Follow existing patterns and use meaningful variable names
-- **Commits**: Use clear, descriptive commit messages
-- **Testing**: Test your changes thoroughly before submitting
-- **Documentation**: Update README.md and comments as needed
-- **Issues**: Check existing issues before creating new ones
-
-### Areas for Contribution
-
-- 🐛 **Bug Fixes**: Check the Issues tab for reported bugs
-- ✨ **Features**: Implement items from the roadmap
-- 📚 **Documentation**: Improve docs, add examples, fix typos
-- 🎨 **UI/UX**: Enhance design and user experience
-- 🔧 **Performance**: Optimize code and reduce bundle size
-- 🧪 **Testing**: Add unit tests and integration tests
-
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### MIT License Summary
-
-```
-MIT License
-
-Copyright (c) 2024 FileShare Hub
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-```
 
 ## 🆘 Support & Troubleshooting
 
@@ -546,64 +381,6 @@ If you encounter any issues:
 2. **Search Issues**: Look through existing [GitHub Issues](../../issues) for solutions
 3. **Create an Issue**: If you can't find a solution, create a detailed issue report
 4. **Community Support**: Join discussions in the repository's Discussion tab
-
-### Common Issues & Solutions
-
-#### Upload Not Working
-```bash
-# Check Pinata configuration
-node scripts/test-api.js
-
-# Test database connection  
-node scripts/test-db-connection.js
-
-# Debug upload process
-node scripts/upload-diagnostics.js
-```
-
-#### Environment Variable Issues
-```bash
-# Check environment setup
-node scripts/check-prod-env.js
-
-# Verify Vercel environment
-node scripts/check-vercel-env.js
-```
-
-#### Database Connection Problems
-- Verify MongoDB URI format and credentials
-- Check network connectivity and firewall settings
-- Ensure IP whitelist includes your deployment IP
-
-#### Email Service Issues
-- Confirm SMTP settings and credentials
-- Use app-specific passwords for Gmail
-- Test email configuration via admin panel
-
-### Debug Scripts Available
-
-The project includes several helpful debug scripts:
-
-```bash
-# Test local functionality
-node scripts/test-local.js
-
-# Test production deployment
-node scripts/test-production.js
-
-# Check API responses
-node scripts/debug-api-responses.js
-
-# Verify environment variables
-node scripts/vercel-env-exact.js
-```
-
-### Performance Optimization
-
-- **File Size**: Keep uploads under 50MB for optimal performance
-- **IPFS Gateway**: Use CDN for faster file delivery
-- **Database**: Index frequently queried fields
-- **Rate Limiting**: Adjust limits based on your usage patterns
 
 ## 📈 Roadmap & Future Features
 
@@ -619,22 +396,6 @@ node scripts/vercel-env-exact.js
 - [ ] **Storage Integrations**: Support for AWS S3, Google Cloud Storage
 - [ ] **Collaboration**: Shared folders and team workspaces
 - [ ] **File Preview**: In-browser preview for common file types
-
-### Technical Improvements
-
-- [ ] **Performance**: Implement caching and CDN integration
-- [ ] **Testing**: Add comprehensive unit and integration tests
-- [ ] **Monitoring**: Implement application performance monitoring
-- [ ] **Security**: Enhanced security auditing and vulnerability scanning
-- [ ] **Scalability**: Auto-scaling and load balancing capabilities
-- [ ] **Documentation**: Interactive API documentation with examples
-
-### Community Features
-
-- [ ] **Plugin System**: Allow community-developed extensions
-- [ ] **Themes**: Customizable UI themes and branding
-- [ ] **Localization**: Multi-language support
-- [ ] **Integration**: Webhooks and third-party service integrations
 
 ---
 
