@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '../ui/Button';
 import Modal from '../ui/Modal';
@@ -8,7 +8,56 @@ import Modal from '../ui/Modal';
 export default function Hero() {
   const [email, setEmail] = useState('');
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [stats, setStats] = useState({
+    totalFiles: 1000,
+    totalUsers: 250,
+    uptimeDays: 30,
+    totalDownloads: 5000
+  });
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  // Fetch dynamic statistics
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        
+        if (data.success) {
+          setStats(data.stats);
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        // Keep fallback stats
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+    
+    // Update stats every 30 seconds
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatNumber = (num) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + 'M';
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toString();
+  };
+
+  const calculateUptime = (days) => {
+    if (days >= 365) {
+      return ((days / 365) * 100).toFixed(1) + '%';
+    }
+    return '99.9%';
+  };
 
   const handleGetStarted = () => {
     router.push('/upload');
@@ -121,21 +170,46 @@ export default function Hero() {
               </Button>
             </form>
           </div>
+        </div>        {/* Stats Section */}
+        <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
+          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-lg transform hover:scale-105 transition-all duration-300">
+            <div className={`text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2 ${loading ? 'animate-pulse' : ''}`}>
+              {loading ? '...' : `${formatNumber(stats.totalFiles)}+`}
+            </div>
+            <div className="text-gray-600 dark:text-gray-300">Files Shared</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {loading ? 'Loading...' : 'Securely stored on IPFS'}
+            </div>
+          </div>
+          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-lg transform hover:scale-105 transition-all duration-300">
+            <div className={`text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2 ${loading ? 'animate-pulse' : ''}`}>
+              {loading ? '...' : `${formatNumber(stats.totalUsers)}+`}
+            </div>
+            <div className="text-gray-600 dark:text-gray-300">Happy Users</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {loading ? 'Loading...' : 'Worldwide community'}
+            </div>
+          </div>
+          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-lg transform hover:scale-105 transition-all duration-300">
+            <div className={`text-3xl font-bold text-green-600 dark:text-green-400 mb-2 ${loading ? 'animate-pulse' : ''}`}>
+              {loading ? '...' : calculateUptime(stats.uptimeDays)}
+            </div>
+            <div className="text-gray-600 dark:text-gray-300">Uptime</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              {loading ? 'Loading...' : `${stats.uptimeDays} days strong`}
+            </div>
+          </div>
         </div>
 
-        {/* Stats Section */}
-        <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">10K+</div>
-            <div className="text-gray-600 dark:text-gray-300">Files Shared</div>
-          </div>
-          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-            <div className="text-3xl font-bold text-purple-600 dark:text-purple-400 mb-2">5K+</div>
-            <div className="text-gray-600 dark:text-gray-300">Happy Users</div>
-          </div>
-          <div className="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 shadow-lg">
-            <div className="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">99.9%</div>
-            <div className="text-gray-600 dark:text-gray-300">Uptime</div>
+        {/* Additional Stats Row */}
+        <div className="mt-8 flex justify-center">
+          <div className="bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-green-500/10 dark:from-blue-900/20 dark:via-purple-900/20 dark:to-green-900/20 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+            <div className={`text-lg font-semibold text-gray-700 dark:text-gray-300 ${loading ? 'animate-pulse' : ''}`}>
+              {loading ? 'Loading downloads...' : `${formatNumber(stats.totalDownloads)}+ Total Downloads`}
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Files downloaded successfully
+            </div>
           </div>
         </div>
       </div>      {/* Floating Elements */}

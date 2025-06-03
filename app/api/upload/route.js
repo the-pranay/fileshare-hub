@@ -18,16 +18,32 @@ import {
 } from '@/lib/errorHandler';
 
 export async function POST(request) {
+  console.log('🚀 Upload API called at:', new Date().toISOString());
+  
   try {
+    console.log('📡 Connecting to database...');
     await connectToDatabase();
+    console.log('✅ Database connected successfully');
     
+    console.log('📝 Parsing form data...');
     const formData = await request.formData();
     const file = formData.get('file');
     const maxDownloads = formData.get('maxDownloads');
     const expiresIn = formData.get('expiresIn'); // in hours
     const password = formData.get('password');
     
+    console.log('📁 File info:', {
+      hasFile: !!file,
+      fileName: file?.name,
+      fileSize: file?.size,
+      fileType: file?.type,
+      maxDownloads,
+      expiresIn,
+      hasPassword: !!password
+    });
+    
     if (!file) {
+      console.log('❌ No file provided');
       throw createError(ErrorTypes.VALIDATION_ERROR, 'No file provided');
     }
 
@@ -121,16 +137,25 @@ export async function POST(request) {
       expiresAt,
       maxDownloads,
     });
-
   } catch (error) {
+    console.error('❌ Upload error:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      isOperational: error.isOperational,
+      statusCode: error.statusCode
+    });
+    
     logError(error, { 
       context: 'File upload',
       userAgent: request.headers.get('user-agent'),
-      ip: request.headers.get('x-forwarded-for') || '127.0.0.1'
+      ip: request.headers.get('x-forwarded-for') || '127.0.0.1',
+      timestamp: new Date().toISOString()
     });
 
     // Handle specific error types
     if (error.isOperational) {
+      console.log('🔄 Returning operational error response');
       return NextResponse.json(
         formatErrorResponse(error),
         { status: error.statusCode }
@@ -138,6 +163,7 @@ export async function POST(request) {
     }
 
     // Handle unexpected errors
+    console.log('💥 Handling unexpected error');
     const unexpectedError = createError(
       ErrorTypes.UPLOAD_FAILED,
       'An unexpected error occurred during upload'
