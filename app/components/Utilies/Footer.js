@@ -3,25 +3,35 @@ import Link from 'next/link';
 export default function Footer() {
   return (
     <footer className="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row justify-between items-center py-6 space-y-4 sm:space-y-0">
-          {/* Copyright */}
-          <div className="text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
-            © 2025 FileShareHub. All rights reserved.
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">        <div className="flex flex-col sm:flex-row justify-between items-center py-6 space-y-4 sm:space-y-0">
+          {/* Copyright and Developer Credit */}
+          <div className="text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1 text-center sm:text-left">
+            <div>© 2025 FileShareHub. All rights reserved.</div>
+            <div className="mt-1">
+              Developed by{' '}
+              <a
+                href="https://github.com/the-pranay"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors duration-200"
+              >
+                the-pranay
+              </a>
+            </div>
           </div>
 
           {/* Links and Icons */}
-          <div className="flex items-center space-x-6 order-1 sm:order-2">
-            {/* Social/GitHub Link */}
+          <div className="flex items-center space-x-6 order-1 sm:order-2">            {/* Social/GitHub Link */}
             <a
-              href="https://github.com/the-pranay"
+              href="https://github.com/the-pranay/fileshare-hub"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
-              aria-label="GitHub Repository"
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors duration-200 group"
+              aria-label="View FileShare Hub on GitHub"
+              title="View source code on GitHub"
             >
               <svg
-                className="h-5 w-5"
+                className="h-5 w-5 group-hover:scale-110 transition-transform duration-200"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >

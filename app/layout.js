@@ -17,6 +17,13 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "FileShare Hub - Secure IPFS File Sharing",
   description: "Share files securely with IPFS, password protection, and expiration dates",
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32' }
+    ],
+    apple: { url: '/favicon.svg', type: 'image/svg+xml' }
+  },
 };
 
 export default function RootLayout({ children }) {
